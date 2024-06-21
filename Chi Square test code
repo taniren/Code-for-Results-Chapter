@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[440]:
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import chi2_contingency
+
+
+# In[441]:
+
+
+file_path = '/Users/tania_ren/Downloads/Customer support & Artificial Intelligence Questionnaire Responses.xlsx'
+data = pd.read_excel(file_path)
+
+# First few rows of the dataset
+data.head()
+
+
+# In[442]:
+
+
+# Extracting the relevant columns for chi^2 test
+columns_we_need = [
+    'Frequency_of_Customer_Support_Interactions', 'Switched_due_to_bad_or_slow_service', 
+                   'Satisfaction_with_current_Support_Systems', 'Importance_of_Good_Quality_Resolution',
+                   'Trust_in_Company_Depends_on_Quick_Effective_Responses', 
+                   'Perception_of_AI_Powered_Support', 'Would_you_chose_AI_over_Human_if_it_was_faster', 
+                   'Would_you_use_the_Demo_AI_Support_Form_in_real_scenario', 
+                   'Importance_of_knowing_the_ticket_was_rooted_correctly', 'Ease_of_use_of_Demo_AI_Support_Form',
+                  'Feeling_heard_by_Support_increases_Trust_to_the_Company','Importance_of_Quick_Problem_Resolution',
+                   'Would_you_trust_AI_more_if_it_was_empathetic']
+
+data_subset = data[columns_we_need]
+
+
+# In[443]:
+
+
+# Convert relevant columns to categorical data if they are not already
+for col in columns_we_need:
+    data_subset[col] = data_subset[col].astype('category')
+
+
+# In[444]:
+
+
+# Creating contingency tables & running chi^2 tests
+chi2_results = {}
+for i, col1 in enumerate(columns_we_need):
+    for col2 in columns_we_need[i+1:]:
+        contingency_table = pd.crosstab(data_subset[col1], data_subset[col2])
+        chi2, p, dof, ex = chi2_contingency(contingency_table)
+        chi2_results[(col1, col2)] = {'chi2': chi2, 'p-value': p, 'dof': dof}
+
+
+# In[445]:
+
+
+# Filter results to show only significant p-values (e.g., p < 0.05)
+#significant_results = {k: v for k, v in chi2_results.items() if v['p-value'] < 0.05}
+
+
+# In[446]:
+
+
+# Extracting chi-square values, p-values, and dof for all pairs
+all_pairs = list(chi2_results.keys())
+all_chi2_values = [result['chi2'] for result in chi2_results.values()]
+all_p_values = [result['p-value'] for result in chi2_results.values()]
+all_dof_values = [result['dof'] for result in chi2_results.values()]
+
+
+# In[447]:
+
+
+# Creating a DF for heatmap with all pairs
+heatmap_data_all = pd.DataFrame({
+    'Variable 1': [pair[0] for pair in all_pairs],
+    'Variable 2': [pair[1] for pair in all_pairs],
+    'Chi-square Value': all_chi2_values,
+    'p-value': all_p_values,
+    'Degrees of Freedom': all_dof_values
+})
+
+
+# In[448]:
+
+
+# Preparing data for heatmap
+heatmap_matrix_all = heatmap_data_all.pivot(
+    index='Variable 1',
+    columns='Variable 2',
+    values='Chi-square Value'
+)
+
+
+# In[449]:
+
+
+
+# Plotting heatmap
+plt.figure(figsize=(14, 10))
+sns.heatmap(heatmap_matrix_all, annot=True, cmap="Blues", linewidths=.5, fmt=".2f")
+plt.title('Heatmap of Chi-square Test Results (All Pairs)')
+plt.show()
+
+
+# In[439]:
+
+
+# Printing the list of chi-square values, p-values, and degrees of freedom
+print("List of Chi-square values, p-values, and degrees of freedom:")
+for pair, chi2, p, dof in zip(all_pairs, all_chi2_values, all_p_values, all_dof_values):
+    print(f"Variable Pair: {pair}, Chi-square Value: {chi2:.2f}, p-value: {p:.5f}, Degrees of Freedom: {dof}")
+
+
+# In[ ]:
