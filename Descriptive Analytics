@@ -1,0 +1,89 @@
+import pandas as pd
+from collections import Counter
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+file_path = '/mnt/data/Customer support & Artificial Intelligence Questionnaire Responses.xlsx'
+data = pd.read_excel(file_path, sheet_name=None)
+
+# relevant sheet
+df = data['Form responses 1']
+
+# Dropping the 'Feedback' column (high number of missing values)
+df_cleaned = df.drop(columns=['Feedback'])
+
+# Splitting the combined responses into individual scenarios for 'When_would_you_choose_Human_over_AI'
+human_over_ai_responses = df_cleaned['When_would_you_choose_Human_over_AI'].str.split(', ')
+flattened_human_over_ai_responses = [item for sublist in human_over_ai_responses for item in sublist]
+unique_human_over_ai_counts = Counter(flattened_human_over_ai_responses).most_common(10)
+
+# Splitting the combined responses into individual preferences for 'Communication_Preferences'
+communication_preferences_responses = df_cleaned['Communication_Preferences'].str.split(', ')
+flattened_communication_preferences_responses = [item for sublist in communication_preferences_responses for item in sublist]
+unique_communication_preferences_counts = Counter(flattened_communication_preferences_responses).most_common(10)
+
+# Getting the top 10 unique counts - the top reasons for human
+unique_human_over_ai_counts = Counter(flattened_human_over_ai_responses).most_common(10)
+
+# Calculating total count for %
+total_count = sum([count for item, count in unique_human_over_ai_counts])
+
+# Creating bar chart for visuals
+sns.set(style="whitegrid", palette="Blues_d")
+plt.figure(figsize=(14, 10))
+barplot = sns.barplot(x=[count for item, count in unique_human_over_ai_counts], 
+                      y=[item for item, count in unique_human_over_ai_counts], 
+                      palette="Blues_d")
+
+# annotations
+for i, (count, percent) in enumerate(zip([count for item, count in unique_human_over_ai_counts], percentages)):
+    barplot.text(count + 1, i, f'{percent:.2f}%', color='black', ha="left", va="center")
+
+plt.title('Top 10 Situations When Respondents Would Choose Human Over AI')
+plt.xlabel('Count')
+plt.ylabel('Situation')
+plt.show()
+
+# Pie chart for top 10 'Communication_Preferences' - UNIQUE 
+labels = [item for item, count in unique_communication_preferences_counts]
+sizes = [count for item, count in unique_communication_preferences_counts]
+
+plt.figure(figsize=(10, 10))
+plt.pie(sizes, labels=labels, autopct='%1.1f%%', colors=sns.color_palette("Blues_d", len(sizes)))
+plt.title('Top 10 Communication Preferences of Respondents')
+plt.show()
+
+#Top Concerns
+# Defining the data
+data = {
+    "Understanding complex issues": [6, 2, 3, 6, 5, 6, 6, 3, 1, 6, 6, 5, 3, 5, 4, 5, 4, 5, 5, 3, 6, 3, 6, 1, 4, 2, 5, 5, 4, 4, 2, 2, 6, 6, 6, 4, 5, 4, 3, 5, 1, 5, 4, 4, 6, 5, 4, 4, 6, 4, 5, 6, 5, 4, 5, 6, 5, 6, 5, 6, 5, 4, 4, 6, 5, 5, 4, 5, 4, 6, 4, 6, 6, 5, 6, 4, 6, 5, 5, 6, 4, 6, 6, 4, 4, 4, 6, 6, 6, 5, 6, 4, 6, 4, 6, 4, 5, 5, 2, 1, 6, 6, 2, 5, 3],
+    "Expressing empathy": [1, 3, 4, 1, 4, 3, 2, 1, 2, 6, 3, 5, 2, 3, 2, 6, 2, 1, 2, 5, 5, 4, 6, 3, 5, 2, 4, 5, 4, 5, 2, 1, 4, 1, 1, 3, 5, 3, 1, 1, 3, 3, 3, 3, 6, 4, 5, 5, 6, 5, 5, 6, 5, 5, 6, 5, 6, 5, 5, 5, 4, 3, 4, 5, 6, 6, 3, 5, 3, 6, 6, 6, 2, 5, 5, 3, 4, 6, 6, 5, 4, 3, 6, 3, 3, 6, 6, 6, 5, 6, 5, 6, 5, 6, 6, 3, 6, 3, 6, 3, 2, 5, 3, 5, 6],
+    "Personalized responses": [3, 6, 2, 4, 3, 2, 5, 5, 3, 3, 4, 6, 1, 2, 3, 6, 6, 4, 5, 4, 6, 5, 6, 2, 6, 2, 6, 3, 4, 4, 2, 2, 2, 2, 5, 4, 6, 6, 3, 3, 3, 4, 1, 3, 6, 6, 4, 4, 6, 4, 4, 6, 4, 4, 4, 4, 6, 5, 6, 4, 6, 3, 3, 6, 4, 4, 3, 4, 3, 5, 5, 5, 1, 4, 6, 4, 5, 4, 6, 5, 4, 3, 5, 4, 6, 4, 6, 5, 6, 5, 4, 4, 6, 4, 6, 4, 5, 4, 1, 4, 6, 1, 6, 6, 5],
+    "Privacy and security": [4, 5, 1, 2, 2, 1, 3, 4, 4, 3, 5, 5, 3, 4, 4, 5, 5, 2, 4, 1, 6, 5, 5, 3, 5, 2, 5, 4, 3, 5, 1, 3, 1, 3, 2, 6, 6, 5, 2, 1, 5, 2, 2, 6, 6, 6, 6, 5, 6, 3, 5, 5, 5, 3, 4, 5, 4, 5, 6, 4, 5, 3, 6, 4, 6, 5, 4, 5, 4, 5, 5, 5, 5, 5, 4, 6, 3, 6, 6, 5, 4, 6, 4, 6, 5, 6, 6, 6, 6, 4, 5, 4, 5, 5, 5, 6, 6, 5, 5, 5, 6, 3, 5, 6, 5],
+    "Response time": [2, 4, 5, 3, 1, 4, 1, 2, 6, 3, 4, 5, 3, 2, 4, 6, 3, 1, 6, 2, 6, 4, 4, 1, 6, 2, 6, 6, 6, 5, 3, 2, 4, 4, 5, 3, 4, 5, 3, 1, 1, 4, 1, 3, 4, 4, 5, 4, 4, 4, 6, 6, 6, 6, 5, 5, 5, 5, 4, 6, 5, 5, 5, 6, 5, 5, 5, 5, 5, 5, 6, 6, 5, 5, 4, 5, 6, 4, 6, 5, 5, 6, 4, 4, 5, 6, 6, 5, 5, 5, 5, 5, 4, 6, 5, 4, 5, 5, 2, 2, 5, 6, 6, 6, 6],
+    "Accuracy of information": [5, 1, 6, 5, 6, 5, 4, 6, 6, 6, 6, 4, 3, 6, 4, 6, 6, 6, 6, 4, 6, 6, 6, 1, 6, 2, 6, 6, 5, 4, 2, 2, 4, 5, 6, 3, 4, 5, 3, 4, 1, 4, 1, 3, 4, 4, 5, 5, 4, 5, 6, 5, 5, 6, 6, 6, 6, 6, 5, 6, 6, 6, 5, 5, 6, 5, 5, 4, 4, 4, 5, 6, 6, 6, 6, 4, 6, 5, 6, 6, 5, 5, 6, 6, 4, 6, 4, 6, 5, 6, 6, 6, 6, 6, 5, 4, 6, 5, 4, 6, 5, 4, 6, 6, 6]
+}
+
+# Creating DataFrame
+df = pd.DataFrame(data)
+
+# Calculating the average ranking for each concern
+average_rankings = df.mean().sort_values()
+
+average_rankings
+
+# Plotting the average rankings with percentages in a vertical bar plot using Blues_d colormap
+sns.set(style="whitegrid")
+plt.figure(figsize=(14, 10))
+barplot = sns.barplot(x=average_rankings.index, y=average_rankings.values, palette="Blues_d")
+
+# Adding percentages
+for i, (value, percent) in enumerate(zip(average_rankings.values, percentages.values)):
+    barplot.text(i, value + 0.1, f'{percent:.2f}%', color='black', ha="center", va="bottom")
+
+plt.xlabel('Concern')
+plt.ylabel('Average Ranking')
+plt.title('Average Ranking for Each Concern with Percentages')
+plt.xticks(rotation=45, ha="right")
+plt.show()
