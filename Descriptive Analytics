@@ -71,19 +71,17 @@ df = pd.DataFrame(data)
 # Calculating the average ranking for each concern
 average_rankings = df.mean().sort_values()
 
-average_rankings
-
-# Plotting the average rankings with percentages in a vertical bar plot using Blues_d colormap
+# Plotting the average rankings in a vertical bar plot using Blues_d colormap
 sns.set(style="whitegrid")
 plt.figure(figsize=(14, 10))
 barplot = sns.barplot(x=average_rankings.index, y=average_rankings.values, palette="Blues_d")
 
-# Adding percentages
-for i, (value, percent) in enumerate(zip(average_rankings.values, percentages.values)):
-    barplot.text(i, value + 0.1, f'{percent:.2f}%', color='black', ha="center", va="bottom")
+# Adding value labels on top of each bar
+for i, value in enumerate(average_rankings.values):
+    barplot.text(i, value, f'{value:.2f}', color='black', ha="center", va="bottom")
 
 plt.xlabel('Concern')
 plt.ylabel('Average Ranking')
-plt.title('Average Ranking for Each Concern with Percentages')
+plt.title('Average Ranking for Each Concern')
 plt.xticks(rotation=45, ha="right")
 plt.show()
